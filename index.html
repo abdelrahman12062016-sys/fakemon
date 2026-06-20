@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fakemon RPG - Champion Streak</title>
+    <title>Fakemon RPG - Champion Shop Edition</title>
     <style>
         body {
             background: radial-gradient(circle, #1a1c2e 0%, #090a10 100%);
@@ -34,10 +34,11 @@
         .btn {
             background: linear-gradient(135deg, #00ffcc, #0099ff);
             color: #10121a; border: none; padding: 12px 18px;
-            margin: 8px; font-weight: bold; border-radius: 8px;
+            margin: 6px; font-weight: bold; border-radius: 8px;
             cursor: pointer; width: 44%; transition: 0.2s; font-size: 15px;
         }
         .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .btn-shop { background: linear-gradient(135deg, #ffaa00, #ff5500); color: white; width: 92%; }
         .starter-btn { width: 90%; margin: 10px 0; font-size: 16px; }
         #log {
             background: #0f111a; border: 2px solid #2a2e45;
@@ -59,25 +60,28 @@
         .sprite-blazecat { background: linear-gradient(135deg, #ff4500, #ffaa00); border: 3px solid #ff4500; }
         .sprite-aquashark { background: linear-gradient(135deg, #0099ff, #0022aa); border: 3px solid #0099ff; }
         .sprite-vinemoth { background: linear-gradient(135deg, #00ff66, #006622); border: 3px solid #00ff66; }
-        .streak-badge {
-            background: #ffaa00; color: #10121a; font-weight: bold;
-            padding: 5px 15px; border-radius: 20px; display: inline-block;
-            margin-bottom: 15px; box-shadow: 0 0 10px #ffaa00;
+        .stats-banner {
+            display: flex; justify-content: space-around; margin-bottom: 15px;
+            font-weight: bold; font-size: 16px;
         }
+        .badge { background: #222; border: 1px solid #444; padding: 5px 12px; border-radius: 15px; }
     </style>
 </head>
 <body>
 
     <div id="starter-screen">
         <h2 style="color: #ffaa00;">🏆 KIES JE RPG FAKEMON 🏆</h2>
-        <p>Versla eindeloze uitdagers en level je Fakemon up!</p>
+        <p>Verdien munten, koop upgrades in de shop en word onverslaanbaar!</p>
         <button class="btn starter-btn" onclick="selectFakemon('Blazecat')">🔥 Blazecat (Vuur)</button>
         <button class="btn starter-btn" onclick="selectFakemon('Aquashark')">💧 Aquashark (Water)</button>
         <button class="btn starter-btn" onclick="selectFakemon('Vinemoth')">🍃 Vinemoth (Gras)</button>
     </div>
 
     <div class="arena" id="arena">
-        <div class="streak-badge">🔥 STREAK: <span id="streakVal">0</span></div>
+        <div class="stats-banner">
+            <div class="badge" style="color: #ffaa00;">🔥 STREAK: <span id="streakVal">0</span></div>
+            <div class="badge" style="color: #ffd700;">🪙 COINS: <span id="coinVal">0</span></div>
+        </div>
         
         <div class="status-box" style="border-left: 5px solid #ff4444;">
             <div id="enemySprite" class="fakemon-sprite sprite-enemy">🐺</div>
@@ -94,7 +98,7 @@
             <div style="flex-grow: 1; text-align: right;">
                 <b id="playerName" style="color: #00ffcc;">Blazecat (Lv. 1)</b>
                 <div class="hp-bar"><div id="playerHp" class="hp-fill"></div></div>
-                <div style="font-size: 11px; color: #bb00ff; margin-top: 2px;">XP naar volgende Level:</div>
+                <div style="font-size: 11px; color: #bb00ff; margin-top: 2px;">XP tot Level Up:</div>
                 <div class="xp-bar"><div id="playerXp" class="xp-fill"></div></div>
             </div>
         </div>
@@ -108,20 +112,20 @@
     </div>
 
     <script>
-        let player = { name: "", hp: 100, maxHp: 100, level: 1, xp: 0, moves: [], cssClass: "", emoji: "" };
+        let player = { name: "", hp: 120, maxHp: 120, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1, moves: [], cssClass: "", emoji: "" };
         let enemy = { name: "", hp: 80, maxHp: 80, level: 1, emoji: "" };
         let streak = 0;
 
         const fakemonData = {
-            Blazecat: { cssClass: "sprite-blazecat", emoji: "🐱", moves: [{ name: "Vlammenklauw 🔥", pow: 15 }, { name: "Vuurstorm 🌪️", pow: 22 }] },
-            Aquashark: { cssClass: "sprite-aquashark", emoji: "🦈", moves: [{ name: "Waterstraal 💧", pow: 14 }, { name: "Aqua Jet 🚀", pow: 24 }] },
-            Vinemoth: { cssClass: "sprite-vinemoth", emoji: "🦋", moves: [{ name: "Bladwhip 🍃", pow: 16 }, { name: "Zonnestraal ☀️", pow: 26 }] }
+            Blazecat: { cssClass: "sprite-blazecat", emoji: "🐱", moves: [{ name: "Vlammenklauw 🔥", pow: 18 }, { name: "Vuurstorm 🌪️", pow: 25 }] },
+            Aquashark: { cssClass: "sprite-aquashark", emoji: "🦈", moves: [{ name: "Waterstraal 💧", pow: 16 }, { name: "Aqua Jet 🚀", pow: 28 }] },
+            Vinemoth: { cssClass: "sprite-vinemoth", emoji: "🦋", moves: [{ name: "Bladwhip 🍃", pow: 17 }, { name: "Zonnestraal ☀️", pow: 30 }] }
         };
 
         const enemyNames = ["Shadowfang 🐺", "Thundergolem ⚡", "Toxicsnake 🐍", "Ironbeast 🐗", "Lavadragon 🐉"];
 
         function selectFakemon(name) {
-            player = { ...player, ...fakemonData[name], name: name, hp: 100, maxHp: 100, level: 1, xp: 0 };
+            player = { ...player, ...fakemonData[name], name: name, hp: 120, maxHp: 120, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1 };
             document.getElementById("playerSprite").className = "fakemon-sprite " + player.cssClass;
             document.getElementById("playerSprite").innerText = player.emoji;
             
@@ -135,32 +139,29 @@
         function generateEnemy() {
             enemy.level = streak + 1;
             enemy.name = enemyNames[Math.floor(Math.random() * enemyNames.length)];
-            enemy.maxHp = 70 + (enemy.level * 15);
+            // Iets minder snel stijgende vijand HP om het eerlijker te maken
+            enemy.maxHp = 60 + (enemy.level * 12);
             enemy.hp = enemy.maxHp;
             
             document.getElementById("enemyName").innerText = `${enemy.name} (Lv. ${enemy.level})`;
             document.getElementById("enemySprite").innerText = enemy.name.split(" ")[1] || "😈";
-            
-            document.getElementById("log").innerHTML = `Een wilde <b>${enemy.name}</b> daagt je uit!`;
+            document.getElementById("log").innerHTML = `Een wilde <b>${enemy.name}</b> valt aan!`;
         }
 
         function updateUI() {
             document.getElementById("playerName").innerText = `${player.name} (Lv. ${player.level})`;
             document.getElementById("streakVal").innerText = streak;
+            document.getElementById("coinVal").innerText = player.coins;
             document.getElementById("playerHp").style.width = (player.hp / player.maxHp * 100) + "%";
             document.getElementById("enemyHp").style.width = (enemy.hp / enemy.maxHp * 100) + "%";
-            document.getElementById("playerXp").style.width = (player.xp * 20) + "%"; // 5 fight per level
-            
-            document.getElementById("move1").innerText = player.moves[0].name;
-            document.getElementById("move2").innerText = player.moves[1].name;
+            document.getElementById("playerXp").style.width = (player.xp * 33.3) + "%"; // 3 fights per level
         }
 
         function attack(moveSlot) {
             if (player.hp <= 0 || enemy.hp <= 0) return;
 
-            // Jouw beurt
             let move = player.moves[moveSlot - 1];
-            let dmg = Math.floor(Math.random() * 6) + move.pow + (player.level * 2);
+            let dmg = Math.floor(Math.random() * 6) + move.pow + (player.level * 2) + player.attackBonus;
             enemy.hp = Math.max(0, enemy.hp - dmg);
             document.getElementById("log").innerHTML = `⚡ <b>${player.name}</b> gebruikt <b>${move.name}</b> en doet ${dmg} schade!`;
             updateUI();
@@ -173,9 +174,9 @@
             // Vijand beurt
             document.getElementById("actions").style.pointerEvents = "none";
             setTimeout(() => {
-                let enemyDmg = Math.floor(Math.random() * 8) + 5 + (enemy.level * 2);
+                let enemyDmg = Math.floor(Math.random() * 6) + 4 + (enemy.level * 1.5);
                 player.hp = Math.max(0, player.hp - enemyDmg);
-                document.getElementById("log").innerHTML += `<br>💀 <b>Tegenstander</b> slaat hard terug en doet ${enemyDmg} schade!`;
+                document.getElementById("log").innerHTML += `<br>💀 <b>Tegenstander</b> slaat terug en doet ${enemyDmg} schade!`;
                 updateUI();
                 document.getElementById("actions").style.pointerEvents = "auto";
 
@@ -183,28 +184,59 @@
                     document.getElementById("log").innerHTML += `<br><br>💥 <b>Je bent K.O.! Je streak eindigt op ${streak}.</b>`;
                     document.getElementById("actions").innerHTML = `<button class="btn" onclick="location.reload()" style="width:90%">Opnieuw Proberen 🔄</button>`;
                 }
-            }, 600);
+            }, 500);
         }
 
         function winMatch() {
             streak++;
             player.xp++;
-            document.getElementById("log").innerHTML += `<br><br>🎉 <b>Je hebt gewonnen! +1 XP!</b>`;
+            let earnedCoins = (Math.floor(Math.random() * 6) + 8) * player.coinMultiplier;
+            player.coins += earnedCoins;
             
-            // Level Up check
-            if (player.xp >= 5) {
+            document.getElementById("log").innerHTML += `<br><br>🎉 <b>Gewonnen! +${earnedCoins} Coins 🪙!</b>`;
+            
+            if (player.xp >= 3) {
                 player.level++;
                 player.xp = 0;
-                player.maxHp += 20;
-                player.hp = player.maxHp; // Volledige heal bij level up
-                document.getElementById("log").innerHTML += `<br><b style="color: #ffaa00;">🌟 LEVEL UP! ${player.name} is nu Level ${player.level}! Max HP verhoogd!</b>`;
+                player.maxHp += 15;
+                player.hp = player.maxHp; 
+                document.getElementById("log").innerHTML += `<br><b style="color: #ffaa00;">🌟 LEVEL UP! Je bent nu Level ${player.level}!</b>`;
             } else {
-                // Kleine heal na elk gevecht om door te kunnen gaan
-                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.3));
+                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.25)); // Kleine heal
             }
 
             updateUI();
-            document.getElementById("actions").innerHTML = `<button class="btn" onclick="nextRound()" style="width:90%">Volgende Uitdager ➡️</button>`;
+            showShopMenu();
+        }
+
+        function showShopMenu() {
+            document.getElementById("actions").innerHTML = `
+                <div style="font-weight:bold; margin-bottom: 5px; color: #ffaa00;">🛒 DE SHOP IS OPEN:</div>
+                <button class="btn" style="font-size:12px;" onclick="buyItem('potion')">🧪 Potion (15g)<br>+50 HP</button>
+                <button class="btn" style="font-size:12px;" onclick="buyItem('protein')">💊 Protein (30g)<br>+3 Aanval</button>
+                <button class="btn-shop btn" style="font-size:12px; width:45%; margin:3px;" onclick="buyItem('amulet')">👑 Amulet (50g)<br>2x Coins</button>
+                <button class="btn" style="background: #00ffcc; color: black; width:45%; margin:3px;" onclick="nextRound()">Verder ➡️</button>
+            `;
+        }
+
+        function buyItem(item) {
+            if (item === 'potion' && player.coins >= 15) {
+                player.coins -= 15;
+                player.hp = Math.min(player.maxHp, player.hp + 50);
+                document.getElementById("log").innerHTML = "🧪 Je kocht een Potion! +50 HP hersteld.";
+            } else if (item === 'protein' && player.coins >= 30) {
+                player.coins -= 30;
+                player.attackBonus += 3;
+                document.getElementById("log").innerHTML = "💊 Je kocht Protein! Je permanente schade stijgt met +3.";
+            } else if (item === 'amulet' && player.coins >= 50) {
+                player.coins -= 50;
+                player.coinMultiplier = 2;
+                document.getElementById("log").innerHTML = "👑 Je kocht de Amulet Coin! Je verdient nu dubbel zoveel goud.";
+            } else {
+                document.getElementById("log").innerHTML = "<span style='color:red;'>❌ Niet genoeg munten!</span>";
+            }
+            updateUI();
+            showShopMenu();
         }
 
         function nextRound() {
