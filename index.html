@@ -3,72 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fakemon Champion Arena</title>
+    <title>Fakemon Champion Arena - Deluxe Edition</title>
     <style>
         body {
-            background-color: #0f111a; color: white;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            background: radial-gradient(circle, #1a1c2e 0%, #090a10 100%);
+            color: white; font-family: 'Segoe UI', Arial, sans-serif;
             display: flex; flex-direction: column; align-items: center;
             justify-content: center; height: 100vh; margin: 0;
         }
         .arena {
-            background: #1a1c28; border: 4px solid #00ffcc;
-            border-radius: 12px; width: 500px; padding: 20px;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
-            text-align: center;
+            background: rgba(30, 34, 54, 0.95);
+            border: 4px solid #00ffcc; border-radius: 20px;
+            width: 550px; padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.3);
+            text-align: center; display: none;
+        }
+        #starter-screen {
+            background: rgba(30, 34, 54, 0.95);
+            border: 4px solid #ffaa00; border-radius: 20px;
+            width: 550px; padding: 25px; text-align: center;
+            box-shadow: 0 0 40px rgba(255, 170, 0, 0.3);
         }
         .hp-bar {
-            background: #333; border-radius: 6px; height: 15px;
+            background: #222; border-radius: 8px; height: 18px;
             width: 100%; margin: 5px 0 15px 0; overflow: hidden;
+            border: 2px solid #444;
         }
         .hp-fill {
-            background: #00ff66; height: 100%; width: 100%;
-            transition: width 0.3s ease;
+            background: linear-gradient(90deg, #00ff66, #33ff99);
+            height: 100%; width: 100%; transition: width 0.4s ease;
         }
         .btn {
             background: linear-gradient(135deg, #00ffcc, #0099ff);
-            color: #10121a; border: none; padding: 10px 15px;
-            margin: 5px; font-weight: bold; border-radius: 6px;
-            cursor: pointer; width: 45%; transition: 0.2s;
+            color: #10121a; border: none; padding: 12px 18px;
+            margin: 8px; font-weight: bold; border-radius: 8px;
+            cursor: pointer; width: 44%; transition: 0.2s; font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .btn:hover { transform: scale(1.03); filter: brightness(1.2); }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .starter-btn { width: 90%; margin: 10px 0; font-size: 16px; }
         #log {
-            background: #0f111a; border: 1px solid #333;
-            height: 100px; overflow-y: auto; padding: 10px;
-            border-radius: 6px; text-align: left; font-size: 14px;
-            margin-top: 15px; color: #a0a5b5;
+            background: #0f111a; border: 2px solid #2a2e45;
+            height: 120px; overflow-y: auto; padding: 12px;
+            border-radius: 8px; text-align: left; font-size: 14px;
+            margin-top: 20px; color: #cbd5e1; line-height: 1.5;
+        }
+        .status-box {
+            background: rgba(15, 17, 26, 0.6); padding: 10px;
+            border-radius: 10px; border: 1px solid #3b4261;
         }
     </style>
 </head>
 <body>
 
-    <div class="arena">
-        <h2>🏆 FAKEMON CHAMPION ARENA 🏆</h2>
+    <div id="starter-screen">
+        <h2 style="color: #ffaa00; text-shadow: 0 0 10px rgba(255,170,0,0.4);">🏆 KIES JE CHAMPION FAKEMON 🏆</h2>
+        <p>Selecteer je partner om je titel te verdedigen:</p>
+        <button class="btn starter-btn" onclick="selectFakemon('Blazecat')">🔥 Blazecat (Vuur Type)</button>
+        <button class="btn starter-btn" onclick="selectFakemon('Aquashark')">💧 Aquashark (Water Type)</button>
+        <button class="btn starter-btn" onclick="selectFakemon('Vinemoth')">🍃 Vinemoth (Gras Type)</button>
+    </div>
+
+    <div class="arena" id="arena">
+        <h2 style="color: #00ffcc; text-shadow: 0 0 15px rgba(0,255,204,0.3); margin-top: 0;">⚡ CHAMPION ARENA ⚡</h2>
         
-        <div style="text-align: left;">
-            <b id="enemyName">Uitdager: Shadowfang</b>
+        <div class="status-box" style="text-align: left; border-left: 5px solid #ff4444;">
+            <b id="enemyName" style="font-size: 16px; color: #ff6666;">Uitdager: Shadowfang</b>
             <div class="hp-bar"><div id="enemyHp" class="hp-fill"></div></div>
         </div>
 
-        <div style="font-size: 24px; margin: 10px 0;">VS</div>
+        <div style="font-size: 22px; font-weight: bold; margin: 15px 0; color: #a0a5b5; text-shadow: 0 0 5px black;">VS</div>
 
-        <div style="text-align: right;">
-            <b id="playerName">Champion: Blazecat</b>
+        <div class="status-box" style="text-align: right; border-right: 5px solid #00ffcc;">
+            <b id="playerName" style="font-size: 16px; color: #00ffcc;">Champion: Blazecat</b>
             <div class="hp-bar"><div id="playerHp" class="hp-fill"></div></div>
         </div>
 
-        <div id="actions">
-            <button class="btn" onclick="attack(1)">Vlammenklauw 🔥</button>
-            <button class="btn" onclick="attack(2)">Vuurstorm 🌪️</button>
+        <div id="actions" style="margin-top: 20px;">
+            <button class="btn" id="move1" onclick="attack(1)">Aanval 1</button>
+            <button class="btn" id="move2" onclick="attack(2)">Aanval 2</button>
         </div>
 
-        <div id="log">Je staat oog in oog met de uitdager! Wat doet Blazecat?</div>
+        <div id="log">De uitdager daagt je uit! Wat ga je doen?</div>
     </div>
 
     <script>
-        let player = { name: "Blazecat", hp: 100, maxHp: 100 };
-        let enemy = { name: "Shadowfang", hp: 100, maxHp: 100 };
+        let player = { name: "", hp: 100, maxHp: 100, moves: [] };
+        let enemy = { name: "Shadowfang", hp: 120, maxHp: 120 };
         const logBox = document.getElementById("log");
+
+        const fakemonData = {
+            Blazecat: {
+                moves: [
+                    { name: "Vlammenklauw 🔥", min: 10, max: 20 },
+                    { name: "Vuurstorm 🌪️", min: 5, max: 28 }
+                ]
+            },
+            Aquashark: {
+                moves: [
+                    { name: "Waterstraal 💧", min: 12, max: 18 },
+                    { name: "Aqua Jet 🚀", min: 8, max: 24 }
+                ]
+            },
+            Vinemoth: {
+                moves: [
+                    { name: "Bladwhip 🍃", min: 11, max: 19 },
+                    { name: "Zonnestraal ☀️", min: 3, max: 32 }
+                ]
+            }
+        };
+
+        function selectFakemon(name) {
+            player.name = name;
+            player.moves = fakemonData[name].moves;
+            
+            document.getElementById("playerName").innerText = `Champion: ${name}`;
+            document.getElementById("move1").innerText = player.moves[0].name;
+            document.getElementById("move2").innerText = player.moves[1].name;
+
+            document.getElementById("starter-screen").style.display = "none";
+            document.getElementById("arena").style.display = "block";
+            
+            logBox.innerHTML = `Je stuurt <b>${name}</b> het veld in! Wat is je eerste zet?`;
+            updateBars();
+        }
 
         function addLog(text) {
             logBox.innerHTML += "<br>" + text;
@@ -79,32 +137,34 @@
             document.getElementById("playerHp").style.width = (player.hp / player.maxHp * 100) + "%";
             document.getElementById("enemyHp").style.width = (enemy.hp / enemy.maxHp * 100) + "%";
             
-            if(player.hp <= 0) {
-                addLog("💥 <b>Blazecat is verslagen... Je hebt verloren als Champion!</b>");
-                document.getElementById("actions").innerHTML = "<h3>GAME OVER</h3>";
-            } else if(enemy.hp <= 0) {
-                addLog("🎉 <b>Shadowfang is K.O.! Je verdedigt je titel met succes!</b>");
-                document.getElementById("actions").innerHTML = "<h3>VICTORY!</h3>";
+            if (player.hp <= 0) {
+                addLog(`💥 <b>${player.name} is K.O.! Je hebt je Champion-titel verloren...</b>`);
+                document.getElementById("actions").innerHTML = "<h3 style='color: #ff4444;'>GAME OVER</h3>";
+            } else if (enemy.hp <= 0) {
+                addLog(`🎉 <b>${enemy.name} is verslagen! Je blijft de nummer 1 Champion!</b>`);
+                document.getElementById("actions").innerHTML = "<h3 style='color: #00ffcc;'>VICTORY!</h3>";
             }
         }
 
         function attack(moveSlot) {
             if (player.hp <= 0 || enemy.hp <= 0) return;
 
-            // Jouw beurt
-            let dmg = moveSlot === 1 ? Math.floor(Math.random() * 12) + 8 : Math.floor(Math.random() * 18) + 5;
-            let moveName = moveSlot === 1 ? "Vlammenklauw" : "Vuurstorm";
+            // Speler beurt
+            let chosenMove = player.moves[moveSlot - 1];
+            let dmg = Math.floor(Math.random() * (chosenMove.max - chosenMove.min + 1)) + chosenMove.min;
             enemy.hp = Math.max(0, enemy.hp - dmg);
-            addLog(`🔥 Blazecat gebruikt <b>${moveName}</b> en doet ${dmg} schade!`);
+            addLog(`⚡ <b>${player.name}</b> gebruikt <b>${chosenMove.name}</b> en doet ${dmg} schade!`);
             updateBars();
 
-            // Tegenstander beurt (als hij nog leeft)
+            // Tegenstander slaat terug
             if (enemy.hp > 0) {
+                document.getElementById("actions").style.pointerEvents = "none"; // Blokkeer knoppen even
                 setTimeout(() => {
-                    let enemyDmg = Math.floor(Math.random() * 14) + 6;
+                    let enemyDmg = Math.floor(Math.random() * 15) + 8;
                     player.hp = Math.max(0, player.hp - enemyDmg);
-                    addLog(`💀 Shadowfang slaat terug met <b>Duistere Beet</b> en doet ${enemyDmg} schade!`);
+                    addLog(`💀 <b>Shadowfang</b> gebruikt <b>Duistere Beet</b> en doet ${enemyDmg} schade!`);
                     updateBars();
+                    document.getElementById("actions").style.pointerEvents = "auto"; // Deactiveer blokkade
                 }, 800);
             }
         }
