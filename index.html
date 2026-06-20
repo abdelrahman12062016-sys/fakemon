@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fakemon Champion Arena - Visual Edition</title>
+    <title>Fakemon Champion Arena - No-Lag Edition</title>
     <style>
         body {
             background: radial-gradient(circle, #1a1c2e 0%, #090a10 100%);
@@ -49,14 +49,23 @@
             margin-top: 20px; color: #cbd5e1; line-height: 1.5;
         }
         .status-box {
-            background: rgba(15, 17, 26, 0.6); padding: 10px;
+            background: rgba(15, 17, 26, 0.6); padding: 15px;
             border-radius: 10px; border: 1px solid #3b4261;
             display: flex; align-items: center; gap: 15px;
+            margin-bottom: 15px;
         }
-        .fakemon-img {
-            width: 80px; height: 80px; border-radius: 8px; 
-            background: rgba(250,250,250,0.1); object-fit: contain;
+        /* DE COOLE CODENIVEAU POKEMON SPRITES */
+        .fakemon-sprite {
+            width: 70px; height: 70px; border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 35px; font-weight: bold;
         }
+        .sprite-shadowfang { background: linear-gradient(135deg, #331133, #110011); border: 3px solid #ff0055; box-shadow: 0 0 15px #ff0055; }
+        .sprite-blazecat { background: linear-gradient(135deg, #ff4500, #ffaa00); border: 3px solid #ff4500; box-shadow: 0 0 15px #ff4500; }
+        .sprite-aquashark { background: linear-gradient(135deg, #0099ff, #0022aa); border: 3px solid #0099ff; box-shadow: 0 0 15px #0099ff; }
+        .sprite-vinemoth { background: linear-gradient(135deg, #00ff66, #006622); border: 3px solid #00ff66; box-shadow: 0 0 15px #00ff66; }
+        
         .info-pane { flex-grow: 1; }
     </style>
 </head>
@@ -74,17 +83,17 @@
         <h2 style="color: #00ffcc; text-shadow: 0 0 15px rgba(0,255,204,0.3); margin-top: 0;">⚡ CHAMPION ARENA ⚡</h2>
         
         <div class="status-box" style="border-left: 5px solid #ff4444;">
-            <img id="enemySprite" class="fakemon-img" src="https://img.pokemondb.net/sprites/black-white/anim/normal/houndoom.gif" alt="Shadowfang">
+            <div class="fakemon-sprite sprite-shadowfang">🐺</div>
             <div class="info-pane" style="text-align: left;">
                 <b id="enemyName" style="font-size: 16px; color: #ff6666;">Uitdager: Shadowfang</b>
                 <div class="hp-bar"><div id="enemyHp" class="hp-fill"></div></div>
             </div>
         </div>
 
-        <div style="font-size: 22px; font-weight: bold; margin: 15px 0; color: #a0a5b5; text-shadow: 0 0 5px black;">VS</div>
+        <div style="font-size: 22px; font-weight: bold; margin: 10px 0; color: #a0a5b5; text-shadow: 0 0 5px black;">VS</div>
 
         <div class="status-box" style="border-right: 5px solid #00ffcc; flex-direction: row-reverse;">
-            <img id="playerSprite" class="fakemon-img" src="" alt="Player">
+            <div id="playerSprite" class="fakemon-sprite">?</div>
             <div class="info-pane" style="text-align: right;">
                 <b id="playerName" style="font-size: 16px; color: #00ffcc;">Champion: Blazecat</b>
                 <div class="hp-bar"><div id="playerHp" class="hp-fill"></div></div>
@@ -100,27 +109,30 @@
     </div>
 
     <script>
-        let player = { name: "", hp: 100, maxHp: 100, moves: [], sprite: "" };
+        let player = { name: "", hp: 100, maxHp: 100, moves: [], cssClass: "", emoji: "" };
         let enemy = { name: "Shadowfang", hp: 120, maxHp: 120 };
         const logBox = document.getElementById("log");
 
         const fakemonData = {
             Blazecat: {
-                sprite: "https://img.pokemondb.net/sprites/black-white/anim/back/normal/litten.gif",
+                cssClass: "sprite-blazecat",
+                emoji: "🐱",
                 moves: [
                     { name: "Vlammenklauw 🔥", min: 10, max: 20 },
                     { name: "Vuurstorm 🌪️", min: 5, max: 28 }
                 ]
             },
             Aquashark: {
-                sprite: "https://img.pokemondb.net/sprites/black-white/anim/back/normal/garchomp.gif",
+                cssClass: "sprite-aquashark",
+                emoji: "🦈",
                 moves: [
                     { name: "Waterstraal 💧", min: 12, max: 18 },
                     { name: "Aqua Jet 🚀", min: 8, max: 24 }
                 ]
             },
             Vinemoth: {
-                sprite: "https://img.pokemondb.net/sprites/black-white/anim/back/normal/volcarona.gif",
+                cssClass: "sprite-vinemoth",
+                emoji: "🦋",
                 moves: [
                     { name: "Bladwhip 🍃", min: 11, max: 19 },
                     { name: "Zonnestraal ☀️", min: 3, max: 32 }
@@ -131,17 +143,20 @@
         function selectFakemon(name) {
             player.name = name;
             player.moves = fakemonData[name].moves;
-            player.sprite = fakemonData[name].sprite;
+            
+            // Update de visuele sprite box
+            let pSprite = document.getElementById("playerSprite");
+            pSprite.className = "fakemon-sprite " + fakemonData[name].cssClass;
+            pSprite.innerText = fakemonData[name].emoji;
             
             document.getElementById("playerName").innerText = `Champion: ${name}`;
-            document.getElementById("playerSprite").src = player.sprite;
             document.getElementById("move1").innerText = player.moves[0].name;
             document.getElementById("move2").innerText = player.moves[1].name;
 
             document.getElementById("starter-screen").style.display = "none";
             document.getElementById("arena").style.display = "block";
             
-            logBox.innerHTML = `Je stuurt <b>${name}</b> het veld in! Wat is je eerste zet?`;
+            logBox.innerHTML = `Je stuurt <b>${name}</b> het veld in! Wat gaan we doen?`;
             updateBars();
         }
 
@@ -166,14 +181,12 @@
         function attack(moveSlot) {
             if (player.hp <= 0 || enemy.hp <= 0) return;
 
-            // Speler beurt
             let chosenMove = player.moves[moveSlot - 1];
             let dmg = Math.floor(Math.random() * (chosenMove.max - chosenMove.min + 1)) + chosenMove.min;
             enemy.hp = Math.max(0, enemy.hp - dmg);
             addLog(`⚡ <b>${player.name}</b> gebruikt <b>${chosenMove.name}</b> en doet ${dmg} schade!`);
             updateBars();
 
-            // Tegenstander slaat terug
             if (enemy.hp > 0) {
                 document.getElementById("actions").style.pointerEvents = "none"; 
                 setTimeout(() => {
