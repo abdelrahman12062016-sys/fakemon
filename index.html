@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fakemon Champion Arena</title>
+    <style>
+        body {
+            background-color: #0f111a; color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100vh; margin: 0;
+        }
+        .arena {
+            background: #1a1c28; border: 4px solid #00ffcc;
+            border-radius: 12px; width: 500px; padding: 20px;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+            text-align: center;
+        }
+        .hp-bar {
+            background: #333; border-radius: 6px; height: 15px;
+            width: 100%; margin: 5px 0 15px 0; overflow: hidden;
+        }
+        .hp-fill {
+            background: #00ff66; height: 100%; width: 100%;
+            transition: width 0.3s ease;
+        }
+        .btn {
+            background: linear-gradient(135deg, #00ffcc, #0099ff);
+            color: #10121a; border: none; padding: 10px 15px;
+            margin: 5px; font-weight: bold; border-radius: 6px;
+            cursor: pointer; width: 45%; transition: 0.2s;
+        }
+        .btn:hover { transform: scale(1.03); filter: brightness(1.2); }
+        #log {
+            background: #0f111a; border: 1px solid #333;
+            height: 100px; overflow-y: auto; padding: 10px;
+            border-radius: 6px; text-align: left; font-size: 14px;
+            margin-top: 15px; color: #a0a5b5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="arena">
+        <h2>🏆 FAKEMON CHAMPION ARENA 🏆</h2>
+        
+        <div style="text-align: left;">
+            <b id="enemyName">Uitdager: Shadowfang</b>
+            <div class="hp-bar"><div id="enemyHp" class="hp-fill"></div></div>
+        </div>
+
+        <div style="font-size: 24px; margin: 10px 0;">VS</div>
+
+        <div style="text-align: right;">
+            <b id="playerName">Champion: Blazecat</b>
+            <div class="hp-bar"><div id="playerHp" class="hp-fill"></div></div>
+        </div>
+
+        <div id="actions">
+            <button class="btn" onclick="attack(1)">Vlammenklauw 🔥</button>
+            <button class="btn" onclick="attack(2)">Vuurstorm 🌪️</button>
+        </div>
+
+        <div id="log">Je staat oog in oog met de uitdager! Wat doet Blazecat?</div>
+    </div>
+
+    <script>
+        let player = { name: "Blazecat", hp: 100, maxHp: 100 };
+        let enemy = { name: "Shadowfang", hp: 100, maxHp: 100 };
+        const logBox = document.getElementById("log");
+
+        function addLog(text) {
+            logBox.innerHTML += "<br>" + text;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function updateBars() {
+            document.getElementById("playerHp").style.width = (player.hp / player.maxHp * 100) + "%";
+            document.getElementById("enemyHp").style.width = (enemy.hp / enemy.maxHp * 100) + "%";
+            
+            if(player.hp <= 0) {
+                addLog("💥 <b>Blazecat is verslagen... Je hebt verloren als Champion!</b>");
+                document.getElementById("actions").innerHTML = "<h3>GAME OVER</h3>";
+            } else if(enemy.hp <= 0) {
+                addLog("🎉 <b>Shadowfang is K.O.! Je verdedigt je titel met succes!</b>");
+                document.getElementById("actions").innerHTML = "<h3>VICTORY!</h3>";
+            }
+        }
+
+        function attack(moveSlot) {
+            if (player.hp <= 0 || enemy.hp <= 0) return;
+
+            // Jouw beurt
+            let dmg = moveSlot === 1 ? Math.floor(Math.random() * 12) + 8 : Math.floor(Math.random() * 18) + 5;
+            let moveName = moveSlot === 1 ? "Vlammenklauw" : "Vuurstorm";
+            enemy.hp = Math.max(0, enemy.hp - dmg);
+            addLog(`🔥 Blazecat gebruikt <b>${moveName}</b> en doet ${dmg} schade!`);
+            updateBars();
+
+            // Tegenstander beurt (als hij nog leeft)
+            if (enemy.hp > 0) {
+                setTimeout(() => {
+                    let enemyDmg = Math.floor(Math.random() * 14) + 6;
+                    player.hp = Math.max(0, player.hp - enemyDmg);
+                    addLog(`💀 Shadowfang slaat terug met <b>Duistere Beet</b> en doet ${enemyDmg} schade!`);
+                    updateBars();
+                }, 800);
+            }
+        }
+    </script>
+</body>
+</html>
