@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fakemon RPG - Champion Shop Edition</title>
+    <title>Fakemon RPG - Ability & Special Move Edition</title>
     <style>
         body {
             background: radial-gradient(circle, #1a1c2e 0%, #090a10 100%);
@@ -35,9 +35,17 @@
             background: linear-gradient(135deg, #00ffcc, #0099ff);
             color: #10121a; border: none; padding: 12px 18px;
             margin: 6px; font-weight: bold; border-radius: 8px;
-            cursor: pointer; width: 44%; transition: 0.2s; font-size: 15px;
+            cursor: pointer; width: 44%; transition: 0.2s; font-size: 14px;
         }
         .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .btn-special {
+            background: linear-gradient(135deg, #ff00ff, #7700aa);
+            color: white; width: 92%; border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.4);
+        }
+        .btn-special:disabled {
+            background: #333; color: #777; border: 2px solid #444; box-shadow: none; cursor: not-allowed;
+        }
         .btn-shop { background: linear-gradient(135deg, #ffaa00, #ff5500); color: white; width: 92%; }
         .starter-btn { width: 90%; margin: 10px 0; font-size: 16px; }
         #log {
@@ -65,16 +73,17 @@
             font-weight: bold; font-size: 16px;
         }
         .badge { background: #222; border: 1px solid #444; padding: 5px 12px; border-radius: 15px; }
+        .ability-text { font-size: 12px; color: #aaa; margin-top: 2px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div id="starter-screen">
-        <h2 style="color: #ffaa00;">🏆 KIES JE RPG FAKEMON 🏆</h2>
-        <p>Verdien munten, koop upgrades in de shop en word onverslaanbaar!</p>
-        <button class="btn starter-btn" onclick="selectFakemon('Blazecat')">🔥 Blazecat (Vuur)</button>
-        <button class="btn starter-btn" onclick="selectFakemon('Aquashark')">💧 Aquashark (Water)</button>
-        <button class="btn starter-btn" onclick="selectFakemon('Vinemoth')">🍃 Vinemoth (Gras)</button>
+        <h2 style="color: #ffaa00;">🏆 FAKEMON: ABILITY & SPECIALS 🏆</h2>
+        <p>Kies je strategische partner en beheer je cooldowns!</p>
+        <button class="btn starter-btn" onclick="selectFakemon('Blazecat')">🔥 Blazecat<br><span style="font-size:12px;color:#eee">Ability: Blaze (1.5x dmg op lage HP)</span></button>
+        <button class="btn starter-btn" onclick="selectFakemon('Aquashark')">💧 Aquashark<br><span style="font-size:12px;color:#eee">Ability: Rough Skin (Slaat 5 dmg terug)</span></button>
+        <button class="btn starter-btn" onclick="selectFakemon('Vinemoth')">🍃 Vinemoth<br><span style="font-size:12px;color:#eee">Ability: Overgrow (Healt +4 HP per beurt)</span></button>
     </div>
 
     <div class="arena" id="arena">
@@ -91,47 +100,63 @@
             </div>
         </div>
 
-        <div style="font-size: 18px; font-weight: bold; margin: 8px 0; color: #a0a5b5;">VS</div>
+        <div style="font-size: 16px; font-weight: bold; margin: 5px 0; color: #a0a5b5;">VS</div>
 
         <div class="status-box" style="border-right: 5px solid #00ffcc; flex-direction: row-reverse;">
             <div id="playerSprite" class="fakemon-sprite">?</div>
             <div style="flex-grow: 1; text-align: right;">
                 <b id="playerName" style="color: #00ffcc;">Blazecat (Lv. 1)</b>
                 <div class="hp-bar"><div id="playerHp" class="hp-fill"></div></div>
-                <div style="font-size: 11px; color: #bb00ff; margin-top: 2px;">XP tot Level Up:</div>
-                <div class="xp-bar"><div id="playerXp" class="xp-fill"></div></div>
+                <div id="playerAbility" class="ability-text">Ability: Loading...</div>
+                <div class="xp-bar" style="margin-top:5px;"><div id="playerXp" class="xp-fill"></div></div>
             </div>
         </div>
 
         <div id="actions" style="margin-top: 15px;">
             <button class="btn" id="move1" onclick="attack(1)">Aanval 1</button>
             <button class="btn" id="move2" onclick="attack(2)">Aanval 2</button>
+            <button class="btn btn-special" id="specialMove" onclick="useSpecial()">ULTIEM SPECIAL MOVE (1x)</button>
         </div>
 
         <div id="log">Gevecht gestart! Wat ga je doen?</div>
     </div>
 
     <script>
-        let player = { name: "", hp: 120, maxHp: 120, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1, moves: [], cssClass: "", emoji: "" };
+        let player = { name: "", hp: 130, maxHp: 130, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1, moves: [], special: {}, abilityName: "", cssClass: "", emoji: "" };
         let enemy = { name: "", hp: 80, maxHp: 80, level: 1, emoji: "" };
         let streak = 0;
+        let specialUsedThisMatch = false;
 
         const fakemonData = {
-            Blazecat: { cssClass: "sprite-blazecat", emoji: "🐱", moves: [{ name: "Vlammenklauw 🔥", pow: 18 }, { name: "Vuurstorm 🌪️", pow: 25 }] },
-            Aquashark: { cssClass: "sprite-aquashark", emoji: "🦈", moves: [{ name: "Waterstraal 💧", pow: 16 }, { name: "Aqua Jet 🚀", pow: 28 }] },
-            Vinemoth: { cssClass: "sprite-vinemoth", emoji: "🦋", moves: [{ name: "Bladwhip 🍃", pow: 17 }, { name: "Zonnestraal ☀️", pow: 30 }] }
+            Blazecat: { 
+                cssClass: "sprite-blazecat", emoji: "🐱", abilityName: "Blaze 🔥",
+                moves: [{ name: "Vlammenklauw 🔥", pow: 16 }, { name: "Vuurstorm 🌪️", pow: 24 }],
+                special: { name: "OVERDRIVE INFERNO 🌋", pow: 45 }
+            },
+            Aquashark: { 
+                cssClass: "sprite-aquashark", emoji: "🦈", abilityName: "Rough Skin 🦈",
+                moves: [{ name: "Waterstraal 💧", pow: 15 }, { name: "Aqua Jet 🚀", pow: 26 }],
+                special: { name: "TSUNAMI SMASH 🌊", pow: 42 }
+            },
+            Vinemoth: { 
+                cssClass: "sprite-vinemoth", emoji: "🦋", abilityName: "Overgrow 🍃",
+                moves: [{ name: "Bladwhip 🍃", pow: 16 }, { name: "Zonnestraal ☀️", pow: 28 }],
+                special: { name: "FOREST APOCALYPSE 🌲", pow: 40 }
+            }
         };
 
         const enemyNames = ["Shadowfang 🐺", "Thundergolem ⚡", "Toxicsnake 🐍", "Ironbeast 🐗", "Lavadragon 🐉"];
 
         function selectFakemon(name) {
-            player = { ...player, ...fakemonData[name], name: name, hp: 120, maxHp: 120, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1 };
+            player = { ...player, ...fakemonData[name], name: name, hp: 130, maxHp: 130, level: 1, xp: 0, coins: 0, attackBonus: 0, coinMultiplier: 1 };
             document.getElementById("playerSprite").className = "fakemon-sprite " + player.cssClass;
             document.getElementById("playerSprite").innerText = player.emoji;
+            document.getElementById("playerAbility").innerText = "Ability: " + player.abilityName;
             
             document.getElementById("starter-screen").style.display = "none";
             document.getElementById("arena").style.display = "block";
             
+            specialUsedThisMatch = false;
             generateEnemy();
             updateUI();
         }
@@ -139,13 +164,12 @@
         function generateEnemy() {
             enemy.level = streak + 1;
             enemy.name = enemyNames[Math.floor(Math.random() * enemyNames.length)];
-            // Iets minder snel stijgende vijand HP om het eerlijker te maken
-            enemy.maxHp = 60 + (enemy.level * 12);
+            enemy.maxHp = 55 + (enemy.level * 10);
             enemy.hp = enemy.maxHp;
             
             document.getElementById("enemyName").innerText = `${enemy.name} (Lv. ${enemy.level})`;
             document.getElementById("enemySprite").innerText = enemy.name.split(" ")[1] || "😈";
-            document.getElementById("log").innerHTML = `Een wilde <b>${enemy.name}</b> valt aan!`;
+            document.getElementById("log").innerHTML = `Een wilde <b>${enemy.name}</b> daagt je uit!`;
         }
 
         function updateUI() {
@@ -154,16 +178,43 @@
             document.getElementById("coinVal").innerText = player.coins;
             document.getElementById("playerHp").style.width = (player.hp / player.maxHp * 100) + "%";
             document.getElementById("enemyHp").style.width = (enemy.hp / enemy.maxHp * 100) + "%";
-            document.getElementById("playerXp").style.width = (player.xp * 33.3) + "%"; // 3 fights per level
+            document.getElementById("playerXp").style.width = (player.xp * 33.3) + "%"; 
+            
+            if(document.getElementById("move1")) {
+                document.getElementById("move1").innerText = player.moves[0].name;
+                document.getElementById("move2").innerText = player.moves[1].name;
+                document.getElementById("specialMove").innerText = `${player.special.name} (${specialUsedThisMatch ? 'LEEG' : '1x'})`;
+                document.getElementById("specialMove").disabled = specialUsedThisMatch;
+            }
         }
 
         function attack(moveSlot) {
-            if (player.hp <= 0 || enemy.hp <= 0) return;
-
             let move = player.moves[moveSlot - 1];
-            let dmg = Math.floor(Math.random() * 6) + move.pow + (player.level * 2) + player.attackBonus;
+            let baseDmg = Math.floor(Math.random() * 5) + move.pow + (player.level * 2) + player.attackBonus;
+            
+            // ABILITY TRIGGER: Blazecat Blaze
+            if (player.name === "Blazecat" && player.hp < (player.maxHp * 0.4)) {
+                baseDmg = Math.floor(baseDmg * 1.5);
+                document.getElementById("log").innerHTML = `💥 <b>Blaze geactiveerd!</b> `;
+            } else {
+                document.getElementById("log").innerHTML = "";
+            }
+
+            executeDamage(baseDmg, move.name);
+        }
+
+        function useSpecial() {
+            if (specialUsedThisMatch) return;
+            specialUsedThisMatch = true;
+            let baseDmg = player.special.pow + (player.level * 3) + player.attackBonus;
+            
+            document.getElementById("log").innerHTML = `<b style='color:#ff00ff;'>✨ ULTIEME SPECIAL MOVE AFGEVUURD! ✨</b><br>`;
+            executeDamage(baseDmg, player.special.name);
+        }
+
+        function executeDamage(dmg, attackName) {
             enemy.hp = Math.max(0, enemy.hp - dmg);
-            document.getElementById("log").innerHTML = `⚡ <b>${player.name}</b> gebruikt <b>${move.name}</b> en doet ${dmg} schade!`;
+            document.getElementById("log").innerHTML += `⚡ <b>${player.name}</b> gebruikt <b>${attackName}</b> en doet ${dmg} schade!`;
             updateUI();
 
             if (enemy.hp <= 0) {
@@ -174,14 +225,29 @@
             // Vijand beurt
             document.getElementById("actions").style.pointerEvents = "none";
             setTimeout(() => {
-                let enemyDmg = Math.floor(Math.random() * 6) + 4 + (enemy.level * 1.5);
+                let enemyDmg = Math.floor(Math.random() * 5) + 4 + (enemy.level * 1.2);
                 player.hp = Math.max(0, player.hp - enemyDmg);
-                document.getElementById("log").innerHTML += `<br>💀 <b>Tegenstander</b> slaat terug en doet ${enemyDmg} schade!`;
+                document.getElementById("log").innerHTML += `<br>💀 <b>${enemy.name}</b> slaat terug met ${enemyDmg} schade!`;
+                
+                // ABILITY TRIGGER: Aquashark Rough Skin
+                if (player.name === "Aquashark" && player.hp > 0) {
+                    enemy.hp = Math.max(0, enemy.hp - 5);
+                    document.getElementById("log").innerHTML += `<br>🛡️ <b>Rough Skin</b> kaatst 5 schade terug naar de vijand!`;
+                }
+
+                // ABILITY TRIGGER: Vinemoth Overgrow (Heal aan einde beurt)
+                if (player.name === "Vinemoth" && player.hp > 0) {
+                    player.hp = Math.min(player.maxHp, player.hp + 4);
+                    document.getElementById("log").innerHTML += `<br>🍃 <b>Overgrow</b> geneest Vinemoth voor +4 HP!`;
+                }
+
                 updateUI();
                 document.getElementById("actions").style.pointerEvents = "auto";
 
-                if (player.hp <= 0) {
-                    document.getElementById("log").innerHTML += `<br><br>💥 <b>Je bent K.O.! Je streak eindigt op ${streak}.</b>`;
+                if (enemy.hp <= 0) {
+                    winMatch();
+                } else if (player.hp <= 0) {
+                    document.getElementById("log").innerHTML += `<br><br>💥 <b>Je bent verslagen! Je streak eindigt op ${streak}.</b>`;
                     document.getElementById("actions").innerHTML = `<button class="btn" onclick="location.reload()" style="width:90%">Opnieuw Proberen 🔄</button>`;
                 }
             }, 500);
@@ -190,7 +256,7 @@
         function winMatch() {
             streak++;
             player.xp++;
-            let earnedCoins = (Math.floor(Math.random() * 6) + 8) * player.coinMultiplier;
+            let earnedCoins = (Math.floor(Math.random() * 5) + 8) * player.coinMultiplier;
             player.coins += earnedCoins;
             
             document.getElementById("log").innerHTML += `<br><br>🎉 <b>Gewonnen! +${earnedCoins} Coins 🪙!</b>`;
@@ -202,7 +268,7 @@
                 player.hp = player.maxHp; 
                 document.getElementById("log").innerHTML += `<br><b style="color: #ffaa00;">🌟 LEVEL UP! Je bent nu Level ${player.level}!</b>`;
             } else {
-                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.25)); // Kleine heal
+                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.25)); 
             }
 
             updateUI();
@@ -240,9 +306,11 @@
         }
 
         function nextRound() {
+            specialUsedThisMatch = false; // Reset de special move voor het nieuwe gevecht!
             document.getElementById("actions").innerHTML = `
                 <button class="btn" id="move1" onclick="attack(1)">Aanval 1</button>
                 <button class="btn" id="move2" onclick="attack(2)">Aanval 2</button>
+                <button class="btn btn-special" id="specialMove" onclick="useSpecial()">ULTIEM SPECIAL MOVE (1x)</button>
             `;
             generateEnemy();
             updateUI();
